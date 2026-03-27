@@ -754,13 +754,13 @@
                     
                     <div class="form-group">
                         <label>✏️ Zählerstand korrigieren (falls nötig)</label>
-                        <input type="text" id="corrected-reading" placeholder="z.B. 84.5">
+                        <input type="text" id="corrected-reading" placeholder="z.B. 84.5" oninput="onReadingChange()">
                         <div id="rounded-info" style="margin-top: 8px; font-size: 0.875rem; color: var(--text-secondary);"></div>
                     </div>
                     
                     <div class="form-group">
                         <label>Zählernummer (letzte 8 Stellen)</label>
-                        <input type="text" id="detected-meter-number" placeholder="z.B. 13757872">
+                        <input type="text" id="detected-meter-number" placeholder="z.B. 13757872" oninput="onMeterNumberChange()">
                     </div>
                     
                     <div class="form-group">
@@ -1068,6 +1068,71 @@
                 if (p.hang_meter && formatMeterNumber(p.hang_meter) === formatted) return true;
                 return false;
             });
+        }
+
+        function onMeterNumberChange() {
+            const meterNumber = document.getElementById('detected-meter-number').value;
+            const matchedProperty = findPropertyByMeterNumber(meterNumber);
+            const select = document.getElementById('property-select');
+            const matchInfo = document.getElementById('property-match-info');
+            
+            if (matchedProperty) {
+                select.value = matchedProperty.id;
+                select.style.borderColor = 'var(--accent)';
+                select.style.background = '#d1fae5';
+                matchInfo.innerHTML = '<span style="color: var(--accent); font-weight: 600;">✓ Zählernummer erkannt - Garten automatisch zugeordnet</span>';
+                
+                showPreviousReading(matchedProperty);
+                
+                if (matchedProperty.hang_meter) {
+                    document.getElementById('hang-reading-section').style.display = 'block';
+                } else {
+                    document.getElementById('hang-reading-section').style.display = 'none';
+                }
+                
+                // Calculate consumption
+                const reading = document.getElementById('corrected-reading').value;
+                if (reading && matchedProperty.haus_last_reading) {
+                    const consumption = parseFloat(reading) - matchedProperty.haus_last_reading;
+                    const info = document.getElementById('verbrauch-info');
+                    info.textContent = `📊 Verbrauch Haus: ${consumption.toFixed(1)} m³`;
+                    info.style.color = consumption >= 0 ? 'var(--accent)' : 'var(--danger)';
+                }
+            } else {
+                select.value = '';
+                select.style.borderColor = '';
+                select.style.background = '';
+                matchInfo.textContent = meterNumber.length >= 4 ? '⚠️ Zählernummer nicht zugeordnet' : '';
+                document.getElementById('previous-reading-display').style.display = 'none';
+                document.getElementById('hang-reading-section').style.display = 'none';
+                document.getElementById('verbrauch-info').textContent = '';
+            }
+        }
+
+        function onReadingChange() {
+            const reading = parseFloat(document.getElementById('corrected-reading').value);
+            if (isNaN(reading)) return;
+            
+            // Update displayed value
+            document.getElementById('result-value').textContent = document.getElementById('corrected-reading').value;
+            
+            // Update rounding info
+            const roundedValue = applyRounding(reading);
+            if (roundingMode !== 'exact') {
+                document.getElementById('rounded-info').textContent = 
+                    `ℹ️ Gerundet (${roundingMode === 'up' ? 'auf' : 'ab'}): ${roundedValue} m³`;
+            }
+            
+            // Recalculate consumption
+            const propertyId = document.getElementById('property-select').value;
+            if (!propertyId) return;
+            const property = properties.find(p => p.id === propertyId);
+            if (!property || !property.haus_last_reading) return;
+            
+            const consumption = reading - property.haus_last_reading;
+            const info = document.getElementById('verbrauch-info');
+            info.textContent = `📊 Verbrauch Haus: ${consumption.toFixed(1)} m³`;
+            info.style.color = consumption >= 0 ? 'var(--accent)' : 'var(--danger)';
         }
 
         // File Selection & Photo
