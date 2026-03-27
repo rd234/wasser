@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wasseruhr Ablesung Professional</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #06b6d4;
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #64748b;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 24px 0 20px;
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            padding: 6px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        
+        /* Info Box */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+            color: var(--primary-dark);
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+        
+        .success-box {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+        
+        /* Camera */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #f1f5f9;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 2px dashed var(--border);
+        }
+        
+        #video, #preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .camera-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .camera-placeholder svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+        }
+        
+        /* Previous Reading Display */
+        .previous-reading {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 2px solid var(--border);
+        }
+        
+        .previous-reading-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .previous-values {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .previous-value-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .previous-value-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .previous-value-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+        
+        .btn-success {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Number Input Keypad */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        .keypad-btn {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .keypad-btn:active {
+            transform: scale(0.95);
+            background: var(--bg);
+        }
+        
+        .keypad-btn.special {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .keypad-btn.danger {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        
+        /* Reading Display */
+        .reading-display {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin: 16px 0;
+            color: white;
+        }
+        
+        .reading-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+        
+        .reading-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        /* Manual Input Display */
+        .manual-display {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .manual-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 3px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Property List */
+        .property-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .property-item {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .property-item:hover {
+            border-color: var(--primary);
+        }
+        
+        .property-item.selectable {
+            cursor: pointer;
+        }
+        
+        .property-item.selected {
+            border-color: var(--accent);
+            background: #d1fae5;
+        }
+        
+        .property-name {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+        
+        .property-meters {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .meter-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .meter-info strong {
+            color: var(--text);
+        }
+        
+        .property-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+        
+        /* Period Selector */
+        .period-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .period-option {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .period-option:hover {
+            border-color: var(--primary);
+        }
+        
+        .period-option.active {
+            border-color: var(--accent);
+            background: #d1fae5;
+        }
+        
+        .period-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .period-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .period-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 12px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+        
+        /* Mode Selection */
+        .mode-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .mode-card {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .mode-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .mode-card.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+        
+        .mode-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .mode-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+        
+        .mode-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .tabs {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💧 Wasseruhr Professional</h1>
+            <p class="subtitle">Halbjahres-Ablesungen mit Verbrauchsanalyse</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('scan')">📸 Ablesen</button>
+            <button class="tab" onclick="switchTab('properties')">🏠 Gärten</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ Einstellungen</button>
+            <button class="tab" onclick="switchTab('export')">📊 Export</button>
+        </div>
+        
+        <!-- Scan Tab -->
+        <div id="scan-tab" class="tab-content active">
+            <!-- Period Selection (compact) -->
+            <div class="card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="card-title" style="margin: 0;">Ableseperiode</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn" onclick="changeYear(-1)" style="padding: 4px 10px; min-width: auto; font-size: 0.85rem;">◀</button>
+                        <span id="year-display" style="font-weight: 700;"></span>
+                        <button class="btn" onclick="changeYear(1)" style="padding: 4px 10px; min-width: auto; font-size: 0.85rem;">▶</button>
+                    </div>
+                </div>
+                <div class="period-selector" style="margin-top: 10px;">
+                    <div class="period-option" onclick="selectPeriod('fruehjahr')" id="period-fruehjahr">
+                        <div class="period-icon">🌱</div>
+                        <div class="period-title">Frühjahr</div>
+                        <div class="period-date" id="period-fruehjahr-date"></div>
+                    </div>
+                    <div class="period-option active" onclick="selectPeriod('herbst')" id="period-herbst">
+                        <div class="period-icon">🍂</div>
+                        <div class="period-title">Herbst</div>
+                        <div class="period-date" id="period-herbst-date"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>📋 Ablauf:</strong> Foto machen → Erkennungsmethode wählen → Ergebnis prüfen → Garten zuordnen → Speichern<br>
+                <strong>💡 Auto-Zuordnung:</strong> Bei erkannter Zählernummer wird der passende Garten automatisch ausgewählt!
+            </div>
+            
+            <div class="card">
+                <input type="file" id="file-input" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(event)">
+                
+                <div class="camera-container" id="camera-container">
+                    <video id="video" autoplay playsinline style="display: none;"></video>
+                    <img id="preview-img" style="display: none;">
+                    <canvas id="canvas"></canvas>
+                    <div class="camera-placeholder" id="camera-placeholder">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <p>Wasseruhr fotografieren</p>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                        📷 Foto machen
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetScan()">
+                        🔄 Neu
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mode Selection -->
+            <div id="mode-selection" style="display: none;">
+                <div class="card">
+                    <div class="card-title">Erkennungsmethode wählen</div>
+                    <div class="mode-selection">
+                        <div class="mode-card" onclick="selectMode('claude')">
+                            <div class="mode-icon">🤖</div>
+                            <div class="mode-title">Claude KI</div>
+                            <div class="mode-desc">Automatisch erkennen</div>
+                        </div>
+                        <div class="mode-card" onclick="selectMode('manual')">
+                            <div class="mode-icon">✏️</div>
+                            <div class="mode-title">Manuell</div>
+                            <div class="mode-desc">Selbst eingeben</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Claude Processing -->
+            <div id="claude-processing" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Claude analysiert das Bild...</p>
+            </div>
+            
+            <!-- Manual Input -->
+            <div id="manual-input" style="display: none;">
+                <div class="card">
+                    <div class="card-title">Zählerstand eingeben</div>
+                    <div class="manual-display">
+                        <div class="manual-value" id="manual-display-value">___.__</div>
+                    </div>
+                    <div class="keypad">
+                        <button class="keypad-btn" onclick="addDigit('7')">7</button>
+                        <button class="keypad-btn" onclick="addDigit('8')">8</button>
+                        <button class="keypad-btn" onclick="addDigit('9')">9</button>
+                        <button class="keypad-btn" onclick="addDigit('4')">4</button>
+                        <button class="keypad-btn" onclick="addDigit('5')">5</button>
+                        <button class="keypad-btn" onclick="addDigit('6')">6</button>
+                        <button class="keypad-btn" onclick="addDigit('1')">1</button>
+                        <button class="keypad-btn" onclick="addDigit('2')">2</button>
+                        <button class="keypad-btn" onclick="addDigit('3')">3</button>
+                        <button class="keypad-btn special" onclick="addDigit('.')">.</button>
+                        <button class="keypad-btn" onclick="addDigit('0')">0</button>
+                        <button class="keypad-btn danger" onclick="deleteDigit()">⌫</button>
+                    </div>
+                    <button class="btn btn-success" onclick="confirmManualReading()" style="margin-top: 16px;">
+                        ✓ Weiter
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Result Display -->
+            <div id="result-display" style="display: none;">
+                <div class="card">
+                    <div class="reading-display">
+                        <div class="reading-value" id="result-value">0.0</div>
+                        <div class="reading-label">Erkannter Zählerstand (m³)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>✏️ Zählerstand korrigieren (falls nötig)</label>
+                        <input type="text" id="corrected-reading" placeholder="z.B. 84.5">
+                        <div id="rounded-info" style="margin-top: 8px; font-size: 0.875rem; color: var(--text-secondary);"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Zählernummer (letzte 8 Stellen)</label>
+                        <input type="text" id="detected-meter-number" placeholder="z.B. 13757872">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Garten zuordnen</label>
+                        <select id="property-select" onchange="onPropertySelectChange()">
+                            <option value="">-- Bitte wählen --</option>
+                        </select>
+                        <div id="property-match-info" style="margin-top: 8px; font-size: 0.875rem;"></div>
+                    </div>
+                    
+                    <!-- Previous reading shown after garden selection -->
+                    <div id="previous-reading-display" style="display: none;">
+                        <div class="previous-reading">
+                            <div class="previous-reading-title">📊 Vorherige Ablesung</div>
+                            <div class="previous-values">
+                                <div class="previous-value-item">
+                                    <div class="previous-value-label">Haus-Zähler</div>
+                                    <div class="previous-value-number" id="prev-haus-value">--</div>
+                                    <div class="previous-value-label" style="margin-top: 4px;" id="prev-haus-date">--</div>
+                                </div>
+                                <div class="previous-value-item" id="prev-hang-container">
+                                    <div class="previous-value-label">Hang-Zähler</div>
+                                    <div class="previous-value-number" id="prev-hang-value">--</div>
+                                    <div class="previous-value-label" style="margin-top: 4px;" id="prev-hang-date">--</div>
+                                </div>
+                            </div>
+                            <div id="verbrauch-info" style="margin-top: 8px; font-size: 0.875rem; font-weight: 600;"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="hang-reading-section" style="display: none;">
+                        <div class="form-group">
+                            <label>Hang-Zähler Ablesung</label>
+                            <input type="text" id="hang-reading" placeholder="z.B. 45.2">
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveReading()">✓ Speichern</button>
+                        <button class="btn btn-secondary" onclick="resetScan()">↺ Abbrechen</button>
+                    </div>
+                    
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; text-align: center;">
+                        💡 Foto wird automatisch im Download-Ordner gespeichert
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Properties Tab -->
+        <div id="properties-tab" class="tab-content">
+            <div class="card">
+                <div class="card-title">Gärten</div>
+                <div id="property-list" class="property-list"></div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="card">
+                <div class="card-title">Daten-Import</div>
+                <div class="info-box success-box">
+                    Importiere Gärten und Zählerstände aus einer CSV-Datei (Stammdaten-Export) oder einer ODS-Abrechnungsdatei.
+                </div>
+                <input type="file" id="import-file" accept=".csv,.ods" style="display:none;" onchange="handleFileImport(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">
+                    📥 CSV oder ODS importieren
+                </button>
+                <div id="import-status" style="margin-top: 12px;"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Daten-Export</div>
+                <div class="info-box">
+                    Exportiere die aktuellen Gärten + Zählerstände für die nächste Ablesung oder als Abrechnung.
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" onclick="exportStammdatenCSV()">
+                        📤 Stammdaten als CSV exportieren
+                    </button>
+                    <button class="btn btn-primary" onclick="exportAbrechnungCSV()">
+                        📊 Abrechnung als CSV exportieren
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">ODS-Abrechnung</div>
+                <div class="info-box success-box">
+                    Lade deine ODS-Vorlage hoch. Beim Export werden die Werte in die richtige Tabellenstruktur (Anfangsablesung, Endablesung, Wasser) eingetragen.
+                </div>
+                <input type="file" id="ods-template-file" accept=".ods" style="display:none;" onchange="handleODSTemplateUpload(event)">
+                <button class="btn" onclick="document.getElementById('ods-template-file').click()">
+                    📄 ODS-Vorlage hochladen
+                </button>
+                <div id="ods-template-status" style="margin-top: 8px;"></div>
+                <div style="margin-top: 12px;">
+                    <button class="btn btn-primary" onclick="exportODS()" id="btn-export-ods" disabled>
+                        📊 Abrechnung als ODS exportieren
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Claude API</div>
+                <div class="form-group">
+                    <label>API-Key</label>
+                    <input type="password" id="api-key-input" placeholder="sk-ant-...">
+                </div>
+                <button class="btn btn-primary" onclick="saveApiKey()">💾 Speichern</button>
+                <div id="api-key-status" style="margin-top: 12px;"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Rundung</div>
+                <div class="info-box">
+                    Rundung auf erste Nachkommastelle (z.B. 84.5 m³)
+                </div>
+                <select id="rounding-select" onchange="saveRoundingMode()">
+                    <option value="exact">Exakt (84.54 → 84.5)</option>
+                    <option value="up">Aufrunden (84.54 → 84.6)</option>
+                    <option value="down">Abrunden (84.56 → 84.5)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Export Tab -->
+        <div id="export-tab" class="tab-content">
+            <div class="card">
+                <div class="card-title">Statistik</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-properties">0</div>
+                        <div class="stat-label">Gärten</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-readings">0</div>
+                        <div class="stat-label">Ablesungen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-consumption">0</div>
+                        <div class="stat-label">Gesamtverbrauch m³</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-period">--</div>
+                        <div class="stat-label">Aktuelle Periode</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Daten exportieren</div>
+                <button class="btn btn-primary" onclick="exportCSV()">
+                    📥 CSV herunterladen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let properties = JSON.parse(localStorage.getItem('properties_v3')) || [];
+        let readings = JSON.parse(localStorage.getItem('readings_v3')) || [];
+        let apiKey = localStorage.getItem('claude_api_key') || '';
+        let roundingMode = localStorage.getItem('rounding_mode') || 'exact';
+        let currentPeriod = localStorage.getItem('current_period') || 'herbst';
+        let currentYear = parseInt(localStorage.getItem('current_year')) || new Date().getFullYear();
+        let odsTemplateData = null; // Stored as ArrayBuffer
+        
+        // Scan state
+        let currentPhoto = null;
+        let manualInputValue = '';
+        let currentMode = null;
+        let selectedPropertyForScan = null;
+        let currentMeterType = 'haus'; // 'haus' or 'hang'
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePropertyList();
+            updateScanPropertySelect();
+            updateStats();
+            updateApiKeyStatus();
+            loadRoundingMode();
+            updatePeriodDisplay();
+        });
+
+        // Year Management
+        function changeYear(delta) {
+            currentYear += delta;
+            localStorage.setItem('current_year', currentYear);
+            updatePeriodDisplay();
+        }
+
+        // Period Management
+        function selectPeriod(period) {
+            currentPeriod = period;
+            localStorage.setItem('current_period', period);
+            updatePeriodDisplay();
+        }
+
+        function updatePeriodDisplay() {
+            document.querySelectorAll('.period-option').forEach(opt => opt.classList.remove('active'));
+            document.getElementById('period-' + currentPeriod).classList.add('active');
+            
+            // Update year display
+            document.getElementById('year-display').textContent = currentYear;
+            document.getElementById('period-fruehjahr-date').textContent = 'März ' + currentYear;
+            document.getElementById('period-herbst-date').textContent = 'Oktober ' + currentYear;
+            
+            // Update stat display
+            const periodText = currentPeriod === 'fruehjahr' ? 'Frühjahr ' + currentYear : 'Herbst ' + currentYear;
+            document.getElementById('stat-period').textContent = periodText;
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            if (tabName === 'export') {
+                updateStats();
+            }
+        }
+
+        // Property Select for result display
+        function updatePropertySelect() {
+            const select = document.getElementById('property-select');
+            select.innerHTML = '<option value="">-- Bitte wählen --</option>' +
+                properties.map(p => `<option value="${p.id}">${p.address}</option>`).join('');
+        }
+        
+        // Also keep updateScanPropertySelect as alias
+        function updateScanPropertySelect() {
+            updatePropertySelect();
+        }
+
+        function onPropertySelectChange() {
+            const propertyId = document.getElementById('property-select').value;
+            if (!propertyId) {
+                document.getElementById('previous-reading-display').style.display = 'none';
+                document.getElementById('hang-reading-section').style.display = 'none';
+                document.getElementById('verbrauch-info').textContent = '';
+                return;
+            }
+            
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) return;
+            
+            showPreviousReading(property);
+            
+            // Show hang input if property has hang meter
+            if (property.hang_meter) {
+                document.getElementById('hang-reading-section').style.display = 'block';
+            } else {
+                document.getElementById('hang-reading-section').style.display = 'none';
+            }
+            
+            // Calculate consumption
+            const reading = document.getElementById('corrected-reading').value;
+            if (reading && property.haus_last_reading) {
+                const consumption = parseFloat(reading) - property.haus_last_reading;
+                const info = document.getElementById('verbrauch-info');
+                info.textContent = `📊 Verbrauch Haus: ${consumption.toFixed(1)} m³`;
+                info.style.color = consumption >= 0 ? 'var(--accent)' : 'var(--danger)';
+            }
+        }
+
+        function showPreviousReading(property) {
+            if (!property) return;
+            
+            const hausReading = property.haus_last_reading;
+            const hangReading = property.hang_last_reading;
+            const lastPeriod = property.last_period || 'Unbekannt';
+            
+            document.getElementById('prev-haus-value').textContent = hausReading != null ? Number(hausReading).toFixed(1) : '--';
+            document.getElementById('prev-haus-date').textContent = lastPeriod;
+            
+            if (property.hang_meter) {
+                document.getElementById('prev-hang-container').style.display = 'block';
+                document.getElementById('prev-hang-value').textContent = hangReading != null ? Number(hangReading).toFixed(1) : '--';
+                document.getElementById('prev-hang-date').textContent = lastPeriod;
+            } else {
+                document.getElementById('prev-hang-container').style.display = 'none';
+            }
+            
+            document.getElementById('previous-reading-display').style.display = 'block';
+        }
+
+        // Meter Number Utilities
+        function formatMeterNumber(meterNumber) {
+            if (!meterNumber) return '';
+            const digits = String(meterNumber).replace(/\D/g, '');
+            return digits.slice(-8);
+        }
+
+        function findPropertyByMeterNumber(meterNumber) {
+            if (!meterNumber) return null;
+            const formatted = formatMeterNumber(meterNumber);
+            if (!formatted) return null;
+            return properties.find(p => {
+                if (p.haus_meter && formatMeterNumber(p.haus_meter) === formatted) return true;
+                if (p.hang_meter && formatMeterNumber(p.hang_meter) === formatted) return true;
+                return false;
+            });
+        }
+
+        // File Selection & Photo
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentPhoto = e.target.result;
+                
+                const preview = document.getElementById('preview-img');
+                preview.src = currentPhoto;
+                preview.style.display = 'block';
+                document.getElementById('camera-placeholder').style.display = 'none';
+                
+                document.getElementById('mode-selection').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Mode Selection
+        function selectMode(mode) {
+            currentMode = mode;
+            document.getElementById('mode-selection').style.display = 'none';
+            
+            if (mode === 'claude') {
+                if (!apiKey) {
+                    alert('⚠️ Kein API-Key!\n\nBitte in Einstellungen speichern.');
+                    resetScan();
+                    return;
+                }
+                processWithClaude();
+            } else {
+                showManualInput();
+            }
+        }
+
+        // Claude API Processing
+        async function processWithClaude() {
+            document.getElementById('claude-processing').style.display = 'block';
+            
+            try {
+                const base64Image = currentPhoto.split(',')[1];
+                
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1024,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'image',
+                                    source: {
+                                        type: 'base64',
+                                        media_type: 'image/jpeg',
+                                        data: base64Image
+                                    }
+                                },
+                                {
+                                    type: 'text',
+                                    text: `Bitte analysiere dieses Wasserzähler-Foto und extrahiere folgende Informationen:
+
+1. **Zählerstand in m³** (die SCHWARZEN Ziffern des Rollenzählers + erste ROTE Ziffer als Nachkommastelle)
+2. **Zählernummer** (die Seriennummer oben auf dem Zähler, falls sichtbar)
+
+Bitte antworte NUR mit einem JSON-Objekt in diesem Format (ohne Markdown-Formatierung):
+{
+  "reading": "84.5",
+  "meter_number": "13757872"
+}
+
+Wichtig: 
+- Kombiniere schwarze Ziffern + erste rote Ziffer zu einer Dezimalzahl
+- Wenn etwas nicht lesbar ist, nutze null
+- Keine Erklärungen, nur das JSON-Objekt`
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API Fehler: ' + response.status);
+                }
+
+                const data = await response.json();
+                const textContent = data.content.find(c => c.type === 'text')?.text || '';
+                
+                const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('Antwort konnte nicht verarbeitet werden');
+                }
+                
+                const result = JSON.parse(jsonMatch[0]);
+                
+                document.getElementById('claude-processing').style.display = 'none';
+                showResult(result.reading, result.meter_number);
+                
+            } catch (error) {
+                console.error('Claude API error:', error);
+                document.getElementById('claude-processing').style.display = 'none';
+                alert('⚠️ KI-Fehler:\n\n' + error.message + '\n\nBitte nutze die manuelle Eingabe.');
+                resetScan();
+            }
+        }
+
+        // Manual Input
+        function showManualInput() {
+            manualInputValue = '';
+            currentMeterType = 'haus';
+            updateManualDisplay();
+            document.getElementById('manual-input').style.display = 'block';
+        }
+
+        function addDigit(digit) {
+            if (digit === '.' && manualInputValue.includes('.')) return;
+            if (manualInputValue.includes('.') && manualInputValue.split('.')[1].length >= 1) return;
+            
+            manualInputValue += digit;
+            updateManualDisplay();
+        }
+
+        function deleteDigit() {
+            manualInputValue = manualInputValue.slice(0, -1);
+            updateManualDisplay();
+        }
+
+        function updateManualDisplay() {
+            document.getElementById('manual-display-value').textContent = manualInputValue || '___.__';
+        }
+
+        function confirmManualReading() {
+            if (!manualInputValue || manualInputValue === '.') {
+                alert('Bitte Zählerstand eingeben.');
+                return;
+            }
+            
+            document.getElementById('manual-input').style.display = 'none';
+            showResult(manualInputValue, null);
+        }
+
+        // Show Result with auto-assignment
+        function showResult(reading, meterNumber) {
+            const roundedValue = applyRounding(parseFloat(reading));
+            const formattedMeterNumber = formatMeterNumber(meterNumber);
+            
+            document.getElementById('result-value').textContent = reading;
+            document.getElementById('corrected-reading').value = reading;
+            document.getElementById('detected-meter-number').value = formattedMeterNumber;
+            
+            // Update property select dropdown
+            updatePropertySelect();
+            
+            // Auto-match property by meter number
+            const matchedProperty = findPropertyByMeterNumber(formattedMeterNumber);
+            const select = document.getElementById('property-select');
+            const matchInfo = document.getElementById('property-match-info');
+            
+            if (matchedProperty) {
+                select.value = matchedProperty.id;
+                select.style.borderColor = 'var(--accent)';
+                select.style.background = '#d1fae5';
+                matchInfo.innerHTML = '<span style="color: var(--accent); font-weight: 600;">✓ Zählernummer erkannt - Garten automatisch zugeordnet</span>';
+                
+                showPreviousReading(matchedProperty);
+                
+                // Show hang input if property has hang meter
+                if (matchedProperty.hang_meter) {
+                    document.getElementById('hang-reading-section').style.display = 'block';
+                }
+                
+                // Calculate consumption
+                if (matchedProperty.haus_last_reading) {
+                    const consumption = parseFloat(reading) - matchedProperty.haus_last_reading;
+                    const info = document.getElementById('verbrauch-info');
+                    info.textContent = `📊 Verbrauch Haus: ${consumption.toFixed(1)} m³`;
+                    info.style.color = consumption >= 0 ? 'var(--accent)' : 'var(--danger)';
+                }
+            } else {
+                select.value = '';
+                select.style.borderColor = '';
+                select.style.background = '';
+                matchInfo.textContent = formattedMeterNumber ? '⚠️ Zählernummer nicht zugeordnet - bitte Garten manuell wählen' : '';
+                document.getElementById('previous-reading-display').style.display = 'none';
+            }
+            
+            if (roundingMode !== 'exact') {
+                document.getElementById('rounded-info').textContent = 
+                    `ℹ️ Gerundet (${roundingMode === 'up' ? 'auf' : 'ab'}): ${roundedValue} m³`;
+            } else {
+                document.getElementById('rounded-info').textContent = '';
+            }
+            
+            document.getElementById('result-display').style.display = 'block';
+        }
+
+        // Rounding
+        function applyRounding(value) {
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) return value;
+            
+            if (roundingMode === 'up') {
+                return Math.ceil(numValue * 10) / 10;
+            }
+            if (roundingMode === 'down') {
+                return Math.floor(numValue * 10) / 10;
+            }
+            return Math.round(numValue * 10) / 10;
+        }
+
+        function saveRoundingMode() {
+            roundingMode = document.getElementById('rounding-select').value;
+            localStorage.setItem('rounding_mode', roundingMode);
+        }
+
+        function loadRoundingMode() {
+            document.getElementById('rounding-select').value = roundingMode;
+        }
+
+        // Save Reading
+        function saveReading() {
+            const hausReading = document.getElementById('corrected-reading').value;
+            const hangReading = document.getElementById('hang-reading') ? document.getElementById('hang-reading').value : '';
+            const meterNumber = document.getElementById('detected-meter-number').value;
+            const propertyId = document.getElementById('property-select').value;
+            
+            if (!hausReading) {
+                alert('⚠️ Bitte Zählerstand eingeben.');
+                return;
+            }
+            
+            if (!propertyId) {
+                alert('⚠️ Bitte Garten auswählen.');
+                return;
+            }
+            
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) {
+                alert('⚠️ Garten nicht gefunden.');
+                return;
+            }
+            
+            const hausRounded = applyRounding(parseFloat(hausReading));
+            const hangRounded = hangReading ? applyRounding(parseFloat(hangReading)) : null;
+            
+            // Download photo
+            if (currentPhoto) {
+                const timestamp = new Date();
+                const dateStr = timestamp.toISOString().slice(0, 10);
+                const timeStr = timestamp.toTimeString().slice(0, 5).replace(':', '-');
+                const cleanAddress = property.address.replace(/[^a-zA-Z0-9]/g, '_');
+                const filename = `wasseruhr_${property.haus_meter}_${cleanAddress}_${dateStr}_${timeStr}.jpg`;
+                
+                const link = document.createElement('a');
+                link.href = currentPhoto;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Save reading
+            const newReading = {
+                id: Date.now().toString(),
+                propertyId: property.id,
+                propertyAddress: property.address,
+                period: currentPeriod === 'fruehjahr' ? `Frühjahr ${currentYear}` : `Herbst ${currentYear}`,
+                haus_meter: property.haus_meter,
+                haus_reading: hausReading,
+                haus_rounded: hausRounded,
+                haus_previous: property.haus_last_reading || null,
+                haus_consumption: property.haus_last_reading ? hausRounded - property.haus_last_reading : null,
+                hang_meter: property.hang_meter || null,
+                hang_reading: hangReading || null,
+                hang_rounded: hangRounded,
+                hang_previous: property.hang_last_reading || null,
+                hang_consumption: (hangReading && property.hang_last_reading) ? hangRounded - property.hang_last_reading : null,
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('de-DE'),
+                time: new Date().toLocaleTimeString('de-DE'),
+                recognitionMode: currentMode || 'manual'
+            };
+            
+            readings.push(newReading);
+            localStorage.setItem('readings_v3', JSON.stringify(readings));
+            
+            // Update property's last reading
+            property.haus_last_reading = hausRounded;
+            if (hangRounded) property.hang_last_reading = hangRounded;
+            property.last_period = newReading.period;
+            
+            const propIndex = properties.findIndex(p => p.id === property.id);
+            properties[propIndex] = property;
+            localStorage.setItem('properties_v3', JSON.stringify(properties));
+            
+            alert('✓ Ablesung gespeichert!\n\n' + 
+                  'Haus: ' + hausRounded + ' m³' +
+                  (hangRounded ? '\nHang: ' + hangRounded + ' m³' : '') +
+                  '\n\n📸 Foto gespeichert');
+            
+            resetScan();
+            updateStats();
+        }
+
+        function resetScan() {
+            currentPhoto = null;
+            currentMode = null;
+            manualInputValue = '';
+            
+            document.getElementById('preview-img').style.display = 'none';
+            document.getElementById('camera-placeholder').style.display = 'block';
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('claude-processing').style.display = 'none';
+            document.getElementById('manual-input').style.display = 'none';
+            document.getElementById('result-display').style.display = 'none';
+            document.getElementById('previous-reading-display').style.display = 'none';
+            document.getElementById('file-input').value = '';
+            
+            // Clear result fields
+            if (document.getElementById('detected-meter-number')) document.getElementById('detected-meter-number').value = '';
+            if (document.getElementById('corrected-reading')) document.getElementById('corrected-reading').value = '';
+            if (document.getElementById('hang-reading')) document.getElementById('hang-reading').value = '';
+            if (document.getElementById('property-select')) {
+                const sel = document.getElementById('property-select');
+                sel.value = '';
+                sel.style.borderColor = '';
+                sel.style.background = '';
+            }
+            if (document.getElementById('property-match-info')) document.getElementById('property-match-info').textContent = '';
+            if (document.getElementById('verbrauch-info')) document.getElementById('verbrauch-info').textContent = '';
+            if (document.getElementById('rounded-info')) document.getElementById('rounded-info').textContent = '';
+            if (document.getElementById('hang-reading-section')) document.getElementById('hang-reading-section').style.display = 'none';
+        }
+
+        // Property Management
+        function updatePropertyList() {
+            const list = document.getElementById('property-list');
+            
+            if (properties.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                        <p>Keine Gärten</p>
+                        <p style="font-size: 0.85rem; margin-top: 8px;">Importiere deine Daten in den Einstellungen</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = properties.map(p => `
+                <div class="property-item">
+                    <div class="property-name">${p.address}</div>
+                    <div class="property-meters">
+                        ${p.haus_meter ? `<div class="meter-info">🏠 Haus: <strong>${p.haus_meter.slice(-8)}</strong> → ${p.haus_last_reading ? p.haus_last_reading.toFixed(1) : '--'} m³</div>` : ''}
+                        ${p.hang_meter ? `<div class="meter-info">📍 Hang: <strong>${p.hang_meter.slice(-8)}</strong> → ${p.hang_last_reading ? p.hang_last_reading.toFixed(1) : '--'} m³</div>` : ''}
+                    </div>
+                    ${p.last_period ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Letzte Ablesung: ${p.last_period}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // ===== FILE IMPORT (CSV + ODS) =====
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            if (ext === 'csv') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        importFromCSV(e.target.result);
+                    } catch (err) {
+                        alert('⚠️ Fehler beim CSV-Import: ' + err.message);
+                        console.error('CSV import error:', err);
+                    }
+                    event.target.value = '';
+                };
+                reader.readAsText(file);
+            } else if (ext === 'ods') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        importFromODS(e.target.result);
+                    } catch (err) {
+                        alert('⚠️ Fehler beim ODS-Import: ' + err.message);
+                        console.error('ODS import error:', err);
+                    }
+                    event.target.value = '';
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert('⚠️ Nicht unterstütztes Format. Bitte CSV oder ODS verwenden.');
+                event.target.value = '';
+            }
+        }
+        
+        // --- CSV Import ---
+        function importFromCSV(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length < 2) {
+                alert('⚠️ CSV-Datei ist leer oder hat nur eine Kopfzeile.');
+                return;
+            }
+            
+            const headers = parseCSVLine(lines[0]);
+            const imported = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.length < 2) continue;
+                
+                const row = {};
+                headers.forEach((h, idx) => {
+                    row[h.trim().toLowerCase()] = (values[idx] || '').trim();
+                });
+                
+                const nr = row['nr'] || row['nummer'] || String(i);
+                const address = row['garten'] || row['adresse'] || row['address'] || ('Garten Nr. ' + nr);
+                const hausMeter = row['haus_meter'] || row['haus-zähler-nr'] || row['haus_zaehler'] || null;
+                const hausYear = row['haus_year'] || row['haus-baujahr'] || row['haus_baujahr'] || null;
+                const hausReading = parseFloat(row['haus_last_reading'] || row['haus-stand'] || row['haus_stand'] || '') || null;
+                const hangMeter = row['hang_meter'] || row['hang-zähler-nr'] || row['hang_zaehler'] || null;
+                const hangYear = row['hang_year'] || row['hang-baujahr'] || row['hang_baujahr'] || null;
+                const hangReading = parseFloat(row['hang_last_reading'] || row['hang-stand'] || row['hang_stand'] || '') || null;
+                const lastPeriod = row['letzte_periode'] || row['last_period'] || '';
+                
+                imported.push({
+                    id: Date.now().toString() + '_' + i,
+                    address: address,
+                    haus_meter: hausMeter || null,
+                    haus_year: hausYear || null,
+                    haus_last_reading: hausReading,
+                    hang_meter: hangMeter || null,
+                    hang_year: hangYear || null,
+                    hang_last_reading: hangReading,
+                    last_period: lastPeriod,
+                    created: new Date().toISOString()
+                });
+            }
+            
+            finishImport(imported);
+        }
+        
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    inQuotes = !inQuotes;
+                } else if ((ch === ',' || ch === ';') && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+        
+        // --- ODS Import ---
+        function importFromODS(arrayBuffer) {
+            const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+            
+            // Collect all data across all sheets, keyed by garden nr
+            // For each garden, track values with their dates to pick the newest
+            const gardenMap = {}; // nr -> { haus_meter, haus_year, hang_meter, hang_year, hausValues: [{date, value}], hangValues: [{date, value}] }
+            
+            workbook.SheetNames.forEach(sheetName => {
+                const ws = workbook.Sheets[sheetName];
+                if (!ws) return;
+                const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+                if (data.length < 4) return;
+                
+                // Find the header row with dates
+                // Look for dates in header rows (first 5 rows)
+                // Structure: col 4 and 5 have Haus dates, col 9 and 10 have Hang dates
+                let hausDateCols = []; // [{col, date}]
+                let hangDateCols = []; // [{col, date}]
+                
+                for (let r = 0; r < Math.min(5, data.length); r++) {
+                    for (let c = 0; c < Math.min(14, data[r].length); c++) {
+                        const val = data[r][c];
+                        const d = parseODSDate(val);
+                        if (!d) continue;
+                        
+                        // Haus-Spalten: col 4,5 (Anfang/End) or col 5,6 (Wasser-Blatt)
+                        if (c >= 4 && c <= 6) {
+                            hausDateCols.push({ col: c, date: d, row: r });
+                        }
+                        // Hang-Spalten: col 9,10 (Anfang/End) or col 11,12 (Wasser-Blatt)
+                        if (c >= 9 && c <= 12) {
+                            hangDateCols.push({ col: c, date: d, row: r });
+                        }
+                    }
+                }
+                
+                // Find the column with the newest date for Haus and Hang
+                const newestHaus = hausDateCols.sort((a, b) => b.date - a.date)[0];
+                const newestHang = hangDateCols.sort((a, b) => b.date - a.date)[0];
+                
+                if (!newestHaus && !newestHang) return; // No dates found, skip sheet
+                
+                const sheetDate = newestHaus ? newestHaus.date : newestHang.date;
+                
+                // Read data rows
+                for (let r = 0; r < data.length; r++) {
+                    const row = data[r];
+                    const firstCell = String(row[0] || '').trim();
+                    
+                    if (!firstCell || firstCell === '') continue;
+                    if (firstCell.toLowerCase().includes('nr') || firstCell.toLowerCase().includes('grt')) continue;
+                    const secondCell = String(row[1] || '').trim();
+                    if (secondCell.includes('Gemeinschaft') || secondCell.includes('Hauptzähler')) continue;
+                    
+                    const isDataRow = !isNaN(firstCell) || firstCell.match(/^\d+\w?$/);
+                    if (!isDataRow) continue;
+                    
+                    const nr = firstCell;
+                    
+                    if (!gardenMap[nr]) {
+                        gardenMap[nr] = {
+                            haus_meter: null, haus_year: null,
+                            hang_meter: null, hang_year: null,
+                            hausValues: [], hangValues: []
+                        };
+                    }
+                    const g = gardenMap[nr];
+                    
+                    // Read Zähler-Nr and Jahr (col 2/3 for Haus, col 7 or 8 for Hang)
+                    const hm = cleanMeterNr(row[2]);
+                    if (hm) { g.haus_meter = hm; g.haus_year = cleanStr(row[3]) || cleanStr(row[4]); }
+                    const hangm = cleanMeterNr(row[7]) || cleanMeterNr(row[8]);
+                    if (hangm) {
+                        g.hang_meter = hangm;
+                        g.hang_year = cleanStr(row[8]) || cleanStr(row[9]) || cleanStr(row[10]);
+                    }
+                    
+                    // Read value from the column with the newest date
+                    if (newestHaus) {
+                        const val = parseNum(row[newestHaus.col]);
+                        if (val !== null) {
+                            g.hausValues.push({ date: newestHaus.date, value: val });
+                        }
+                    }
+                    if (newestHang) {
+                        const val = parseNum(row[newestHang.col]);
+                        if (val !== null) {
+                            g.hangValues.push({ date: newestHang.date, value: val });
+                        }
+                    }
+                }
+            });
+            
+            // Build imported array: for each garden, pick the value with the newest date
+            const imported = [];
+            let newestDate = null;
+            
+            Object.keys(gardenMap).forEach((nr, idx) => {
+                const g = gardenMap[nr];
+                
+                // Sort values by date descending, pick newest
+                g.hausValues.sort((a, b) => b.date - a.date);
+                g.hangValues.sort((a, b) => b.date - a.date);
+                
+                const hausReading = g.hausValues.length > 0 ? g.hausValues[0].value : null;
+                const hangReading = g.hangValues.length > 0 ? g.hangValues[0].value : null;
+                const latestDate = g.hausValues.length > 0 ? g.hausValues[0].date : 
+                                   (g.hangValues.length > 0 ? g.hangValues[0].date : null);
+                
+                if (latestDate && (!newestDate || latestDate > newestDate)) {
+                    newestDate = latestDate;
+                }
+                
+                imported.push({
+                    id: Date.now().toString() + '_' + idx,
+                    address: 'Garten Nr. ' + nr,
+                    haus_meter: g.haus_meter,
+                    haus_year: g.haus_year,
+                    haus_last_reading: hausReading,
+                    hang_meter: g.hang_meter,
+                    hang_year: g.hang_year,
+                    hang_last_reading: hangReading,
+                    last_period: latestDate ? ('Ablesung ' + latestDate.toLocaleDateString('de-DE')) : '',
+                    created: new Date().toISOString()
+                });
+            });
+            
+            const dateStr = newestDate ? newestDate.toLocaleDateString('de-DE') : '';
+            if (imported.length > 0) {
+                alert('ODS gelesen: ' + imported.length + ' Gärten gefunden.\n' +
+                      'Neuestes Ablese-Datum: ' + dateStr + '\n' +
+                      'Die Werte unter dem neuesten Datum werden als letzte Ablesung übernommen.');
+            }
+            
+            finishImport(imported);
+        }
+        
+        function parseODSDate(val) {
+            if (!val) return null;
+            // SheetJS with cellDates may return Date objects or date strings
+            if (val instanceof Date && !isNaN(val)) return val;
+            // Try parsing string dates (yyyy-mm-dd or dd.mm.yyyy)
+            if (typeof val === 'string') {
+                // ISO format from SheetJS
+                const isoMatch = val.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+                // German format
+                const deMatch = val.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+                if (deMatch) return new Date(parseInt(deMatch[3]), parseInt(deMatch[2]) - 1, parseInt(deMatch[1]));
+            }
+            // Excel serial date number
+            if (typeof val === 'number' && val > 40000 && val < 60000) {
+                return new Date((val - 25569) * 86400000);
+            }
+            return null;
+        }
+        
+        function cleanMeterNr(val) {
+            if (val === undefined || val === null) return null;
+            const s = String(val).trim();
+            if (s === '' || s === ' ') return null;
+            return s.replace(/\D/g, '') || null;
+        }
+        
+        function cleanStr(val) {
+            if (val === undefined || val === null) return null;
+            const s = String(val).trim();
+            if (s === '' || s === ' ') return null;
+            return s;
+        }
+        
+        function parseNum(val) {
+            if (val === undefined || val === null || val === '' || val === ' ') return null;
+            const n = parseFloat(val);
+            return isNaN(n) ? null : n;
+        }
+        
+        // --- Shared import finish ---
+        function finishImport(imported) {
+            if (imported.length === 0) {
+                alert('⚠️ Keine Gärten-Daten gefunden.');
+                return;
+            }
+            
+            if (properties.length > 0) {
+                if (!confirm('Es sind bereits ' + properties.length + ' Gärten vorhanden.\n\nOK = Ersetzen\nAbbrechen = Abbrechen')) {
+                    return;
+                }
+            }
+            
+            properties = imported;
+            localStorage.setItem('properties_v3', JSON.stringify(properties));
+            
+            updatePropertyList();
+            updateScanPropertySelect();
+            updateStats();
+            
+            document.getElementById('import-status').innerHTML = 
+                '<div style="color: var(--accent); margin-top: 8px;">✓ ' + imported.length + ' Gärten importiert!</div>';
+            
+            alert('✓ Import erfolgreich!\n\n' + imported.length + ' Gärten importiert.');
+        }
+        
+        // ===== EXPORTS =====
+        
+        // Stammdaten CSV (for re-import next period)
+        function exportStammdatenCSV() {
+            if (properties.length === 0) {
+                alert('Keine Gärten vorhanden.');
+                return;
+            }
+            
+            const periodText = currentPeriod === 'fruehjahr' ? 'Frühjahr ' + currentYear : 'Herbst ' + currentYear;
+            
+            let csv = 'Nr,Garten,Haus_Meter,Haus_Year,Haus_Last_Reading,Hang_Meter,Hang_Year,Hang_Last_Reading,Letzte_Periode\n';
+            
+            properties.forEach((p, idx) => {
+                const latestReading = readings
+                    .filter(r => r.propertyId === p.id)
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                
+                const hausStand = latestReading ? (latestReading.haus_rounded || p.haus_last_reading || '') : (p.haus_last_reading || '');
+                const hangStand = latestReading ? (latestReading.hang_rounded || p.hang_last_reading || '') : (p.hang_last_reading || '');
+                const periode = latestReading ? (latestReading.period || periodText) : (p.last_period || '');
+                
+                csv += `"${idx + 1}","${p.address}","${p.haus_meter || ''}","${p.haus_year || ''}","${hausStand}","${p.hang_meter || ''}","${p.hang_year || ''}","${hangStand}","${periode}"\n`;
+            });
+            
+            downloadFile(csv, `wasseruhr-stammdaten-${periodText.replace(' ', '-')}.csv`, 'text/csv;charset=utf-8;');
+            alert('✓ Stammdaten-CSV exportiert!\n\nDiese Datei kannst du bei der nächsten Ablesung importieren.');
+        }
+        
+        // Abrechnung CSV (format similar to the ODS Wasserabrechnung)
+        function exportAbrechnungCSV() {
+            if (properties.length === 0) {
+                alert('Keine Gärten vorhanden.');
+                return;
+            }
+            
+            const periodText = currentPeriod === 'fruehjahr' ? 'Frühjahr ' + currentYear : 'Herbst ' + currentYear;
+            
+            let csv = 'Nr,Garten,Haus Zähler-Nr,Baujahr,Anfang m³,Ende m³,Verbrauch m³,Hang Zähler-Nr,Baujahr,Anfang m³,Ende m³,Verbrauch m³\n';
+            
+            let gesamtHaus = 0;
+            let gesamtHang = 0;
+            
+            properties.forEach((p, idx) => {
+                const latestReading = readings
+                    .filter(r => r.propertyId === p.id)
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                
+                const hausAnfang = p.haus_last_reading || p.haus_anfang || '';
+                const hausEnde = latestReading ? (latestReading.haus_rounded || '') : '';
+                const hausVerbrauch = (hausAnfang !== '' && hausEnde !== '') ? (parseFloat(hausEnde) - parseFloat(hausAnfang)).toFixed(1) : '';
+                
+                const hangAnfang = p.hang_last_reading || p.hang_anfang || '';
+                const hangEnde = latestReading ? (latestReading.hang_rounded || '') : '';
+                const hangVerbrauch = (hangAnfang !== '' && hangEnde !== '') ? (parseFloat(hangEnde) - parseFloat(hangAnfang)).toFixed(1) : '';
+                
+                if (hausVerbrauch) gesamtHaus += parseFloat(hausVerbrauch);
+                if (hangVerbrauch) gesamtHang += parseFloat(hangVerbrauch);
+                
+                const nr = p.address.replace('Garten Nr. ', '');
+                csv += `"${nr}","${p.address}","${p.haus_meter || ''}","${p.haus_year || ''}","${hausAnfang}","${hausEnde}","${hausVerbrauch}","${p.hang_meter || ''}","${p.hang_year || ''}","${hangAnfang}","${hangEnde}","${hangVerbrauch}"\n`;
+            });
+            
+            // Summary row
+            csv += `"","GESAMT","","","","","${gesamtHaus.toFixed(1)}","","","","","${gesamtHang.toFixed(1)}"\n`;
+            
+            downloadFile(csv, `wasserabrechnung-${periodText.replace(' ', '-')}.csv`, 'text/csv;charset=utf-8;');
+            alert('✓ Abrechnung exportiert!');
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob(['\uFEFF' + content], { type: mimeType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+        
+        // ===== ODS TEMPLATE & EXPORT =====
+        
+        function handleODSTemplateUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    odsTemplateData = e.target.result;
+                    // Verify it's a valid spreadsheet
+                    const wb = XLSX.read(odsTemplateData, { type: 'array' });
+                    const sheetNames = wb.SheetNames;
+                    
+                    document.getElementById('ods-template-status').innerHTML = 
+                        '<div style="color: var(--accent);">✓ Vorlage geladen: ' + sheetNames.join(', ') + '</div>';
+                    document.getElementById('btn-export-ods').disabled = false;
+                    
+                    // Store template name for export filename
+                    odsTemplateData._fileName = file.name;
+                } catch (err) {
+                    alert('⚠️ Fehler beim Laden der Vorlage: ' + err.message);
+                    console.error(err);
+                }
+                event.target.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function exportODS() {
+            if (!odsTemplateData) {
+                alert('⚠️ Bitte zuerst eine ODS-Vorlage hochladen.');
+                return;
+            }
+            if (properties.length === 0) {
+                alert('⚠️ Keine Gärten vorhanden.');
+                return;
+            }
+            
+            try {
+                const wb = XLSX.read(odsTemplateData, { type: 'array' });
+                
+                // Build a lookup: garden nr → property + latest reading
+                const gardenData = {};
+                properties.forEach(p => {
+                    const nr = p.address.replace('Garten Nr. ', '').trim();
+                    const latestReading = readings
+                        .filter(r => r.propertyId === p.id)
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                    
+                    // If this garden nr already exists (e.g. nr 7 appears twice), 
+                    // merge: keep existing haus data, add new hang data
+                    if (gardenData[nr]) {
+                        if (p.hang_meter && !gardenData[nr].hang_meter) {
+                            gardenData[nr].hang_meter = p.hang_meter;
+                            gardenData[nr].hang_year = p.hang_year;
+                            gardenData[nr].hang_last_reading = p.hang_last_reading;
+                            gardenData[nr].hang_anfang = p.hang_anfang;
+                            if (latestReading && latestReading.hang_rounded) {
+                                gardenData[nr].hangEnde = parseFloat(latestReading.hang_rounded);
+                            }
+                        }
+                    } else {
+                        gardenData[nr] = {
+                            ...p,
+                            hausEnde: latestReading ? parseFloat(latestReading.haus_rounded || '') || null : null,
+                            hangEnde: latestReading ? parseFloat(latestReading.hang_rounded || '') || null : null
+                        };
+                    }
+                });
+                
+                const periodText = currentPeriod === 'fruehjahr' ? 'Frühjahr ' + currentYear : 'Herbst ' + currentYear;
+                const today = new Date();
+                
+                // Process each sheet
+                wb.SheetNames.forEach(sheetName => {
+                    const ws = wb.Sheets[sheetName];
+                    if (!ws) return;
+                    
+                    const sheetLower = sheetName.toLowerCase();
+                    const isAnfang = sheetLower.includes('anfang');
+                    const isEnd = sheetLower.includes('end');
+                    const isWasser = sheetLower.includes('wasser');
+                    
+                    if (!isAnfang && !isEnd && !isWasser) return;
+                    
+                    // Update the date in the header (row 0, 1)
+                    // Row 0 col 7 (or wherever the date is): set to today
+                    if (isAnfang || isEnd) {
+                        setCellValue(ws, 0, 7, today);
+                    }
+                    
+                    // Update Ablese-Datum in row 1
+                    if (isAnfang) {
+                        // col 4 = new Anfang date (today), col 5 = old End date (stays)
+                        setCellValue(ws, 1, 4, today);
+                    } else if (isEnd) {
+                        // col 5 = new End date (today)
+                        setCellValue(ws, 1, 5, today);
+                    } else if (isWasser) {
+                        setCellValue(ws, 1, 6, today);
+                    }
+                    
+                    // Read existing data rows to find garden numbers and update values
+                    const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                    
+                    for (let r = 0; r < data.length; r++) {
+                        const row = data[r];
+                        const firstCell = String(row[0] || '').trim();
+                        
+                        // Skip non-data rows
+                        if (!firstCell || firstCell.toLowerCase().includes('nr') || firstCell === '') continue;
+                        const isDataRow = !isNaN(firstCell) || firstCell.match(/^\d+\w?$/);
+                        if (!isDataRow) continue;
+                        
+                        // Skip summary rows
+                        const secondCell = String(row[1] || '').trim();
+                        if (secondCell.includes('Gemeinschaft') || secondCell.includes('Hauptzähler')) continue;
+                        
+                        const nr = firstCell;
+                        const gd = gardenData[nr];
+                        if (!gd) continue;
+                        
+                        if (isAnfang) {
+                            // Anfangsablesung: col 4 = Anfang (old End becomes new Anfang), col 5 = Ende (new reading)
+                            // Shift: old Endstand → new Anfang
+                            if (gd.haus_last_reading !== null) setCellValue(ws, r, 4, gd.haus_last_reading);
+                            if (gd.hausEnde !== null) setCellValue(ws, r, 5, gd.hausEnde);
+                            if (gd.hang_last_reading !== null) setCellValue(ws, r, 9, gd.hang_last_reading);
+                            if (gd.hangEnde !== null) setCellValue(ws, r, 10, gd.hangEnde);
+                        } else if (isEnd) {
+                            // Endablesung: col 4 = Anfangsstand, col 5 = Endstand
+                            if (gd.haus_last_reading !== null) setCellValue(ws, r, 4, gd.haus_last_reading);
+                            if (gd.hausEnde !== null) setCellValue(ws, r, 5, gd.hausEnde);
+                            if (gd.hang_last_reading !== null) setCellValue(ws, r, 9, gd.hang_last_reading);
+                            if (gd.hangEnde !== null) setCellValue(ws, r, 10, gd.hangEnde);
+                        } else if (isWasser) {
+                            // Wasser (Jahresabrechnung): col 5 = Anfang, col 6 = Ende, col 7 = Verbrauch Haus
+                            //                            col 11 = Anfang Hang, col 12 = Ende Hang, col 13 = Verbrauch Hang
+                            if (gd.haus_last_reading !== null) setCellValue(ws, r, 5, gd.haus_last_reading);
+                            if (gd.hausEnde !== null) {
+                                setCellValue(ws, r, 6, gd.hausEnde);
+                                const verbrauch = gd.haus_last_reading !== null ? 
+                                    Math.round((gd.hausEnde - gd.haus_last_reading) * 10) / 10 : '';
+                                if (verbrauch !== '') setCellValue(ws, r, 7, verbrauch);
+                            }
+                            if (gd.hang_last_reading !== null) setCellValue(ws, r, 11, gd.hang_last_reading);
+                            if (gd.hangEnde !== null) {
+                                setCellValue(ws, r, 12, gd.hangEnde);
+                                const verbrauch = gd.hang_last_reading !== null ? 
+                                    Math.round((gd.hangEnde - gd.hang_last_reading) * 10) / 10 : '';
+                                if (verbrauch !== '') setCellValue(ws, r, 13, verbrauch);
+                            }
+                        }
+                    }
+                });
+                
+                // Write out as ODS
+                const odsOut = XLSX.write(wb, { bookType: 'ods', type: 'array' });
+                const blob = new Blob([odsOut], { type: 'application/vnd.oasis.opendocument.spreadsheet' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Wasserabrechnung_${currentYear}.ods`;
+                link.click();
+                
+                alert('✓ ODS-Abrechnung exportiert!');
+                
+            } catch (err) {
+                alert('⚠️ Fehler beim ODS-Export: ' + err.message);
+                console.error('ODS export error:', err);
+            }
+        }
+        
+        function setCellValue(ws, row, col, value) {
+            const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            if (!ws[cellRef]) ws[cellRef] = {};
+            if (value instanceof Date) {
+                ws[cellRef] = { t: 'd', v: value };
+            } else if (typeof value === 'number') {
+                ws[cellRef] = { t: 'n', v: value };
+            } else {
+                ws[cellRef] = { t: 's', v: String(value) };
+            }
+            
+            // Ensure the sheet range covers this cell
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            if (row > range.e.r) range.e.r = row;
+            if (col > range.e.c) range.e.c = col;
+            ws['!ref'] = XLSX.utils.encode_range(range);
+        }
+
+        // API Key
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (!key.startsWith('sk-ant-')) {
+                alert('⚠️ Ungültiger API-Key!');
+                return;
+            }
+            apiKey = key;
+            localStorage.setItem('claude_api_key', key);
+            updateApiKeyStatus();
+            alert('✓ API-Key gespeichert!');
+        }
+
+        function updateApiKeyStatus() {
+            const status = document.getElementById('api-key-status');
+            if (apiKey) {
+                status.innerHTML = '<div style="color: var(--accent);">✓ API-Key gespeichert</div>';
+                document.getElementById('api-key-input').value = '';
+            } else {
+                status.innerHTML = '<div style="color: var(--danger);">⚠️ Kein API-Key</div>';
+            }
+        }
+
+        // Stats & Export
+        function updateStats() {
+            document.getElementById('stat-properties').textContent = properties.length;
+            document.getElementById('stat-readings').textContent = readings.length;
+            
+            const totalConsumption = readings.reduce((sum, r) => {
+                return sum + (r.haus_consumption || 0) + (r.hang_consumption || 0);
+            }, 0);
+            document.getElementById('stat-consumption').textContent = totalConsumption.toFixed(1);
+        }
+
+        function exportCSV() {
+            if (readings.length === 0) {
+                alert('Keine Ablesungen vorhanden.');
+                return;
+            }
+            
+            let csv = 'Periode,Datum,Uhrzeit,Garten,Haus-Zähler,Haus-Stand,Haus-Verbrauch,Hang-Zähler,Hang-Stand,Hang-Verbrauch\n';
+            
+            readings.forEach(r => {
+                csv += `"${r.period}","${r.date}","${r.time}","${r.propertyAddress}","${r.haus_meter}","${r.haus_rounded}","${r.haus_consumption || 0}","${r.hang_meter || ''}","${r.hang_rounded || ''}","${r.hang_consumption || 0}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `wasseruhr-ablesungen-${currentYear}.csv`;
+            link.click();
+            
+            alert('✓ CSV wird heruntergeladen!');
+        }
+    </script>
+</body>
+</html>
