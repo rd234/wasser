@@ -663,7 +663,8 @@
             </div>
             
             <div class="card">
-                <input type="file" id="file-input" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(event)">
+                <input type="file" id="file-input-camera" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(event)">
+                <input type="file" id="file-input-gallery" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
                 
                 <div class="camera-container" id="camera-container">
                     <video id="video" autoplay playsinline style="display: none;"></video>
@@ -679,8 +680,11 @@
                 </div>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-                        📷 Foto machen
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input-camera').click()">
+                        📷 Foto
+                    </button>
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input-gallery').click()" style="background: var(--secondary);">
+                        🖼️ Galerie
                     </button>
                     <button class="btn btn-secondary" onclick="resetScan()">
                         🔄 Neu
@@ -1389,7 +1393,10 @@ Wichtig:
             document.getElementById('manual-input').style.display = 'none';
             document.getElementById('result-display').style.display = 'none';
             document.getElementById('previous-reading-display').style.display = 'none';
-            document.getElementById('file-input').value = '';
+            
+            // Clear file inputs
+            if (document.getElementById('file-input-camera')) document.getElementById('file-input-camera').value = '';
+            if (document.getElementById('file-input-gallery')) document.getElementById('file-input-gallery').value = '';
             
             // Clear result fields
             if (document.getElementById('detected-meter-number')) document.getElementById('detected-meter-number').value = '';
