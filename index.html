@@ -1075,16 +1075,41 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            // Compress image before storing (max 1200px, JPEG quality 0.7)
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentPhoto = e.target.result;
-                
-                const preview = document.getElementById('preview-img');
-                preview.src = currentPhoto;
-                preview.style.display = 'block';
-                document.getElementById('camera-placeholder').style.display = 'none';
-                
-                document.getElementById('mode-selection').style.display = 'block';
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxSize = 1200;
+                    let w = img.width;
+                    let h = img.height;
+                    
+                    if (w > maxSize || h > maxSize) {
+                        if (w > h) {
+                            h = Math.round(h * maxSize / w);
+                            w = maxSize;
+                        } else {
+                            w = Math.round(w * maxSize / h);
+                            h = maxSize;
+                        }
+                    }
+                    
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    const preview = document.getElementById('preview-img');
+                    preview.src = currentPhoto;
+                    preview.style.display = 'block';
+                    document.getElementById('camera-placeholder').style.display = 'none';
+                    
+                    document.getElementById('mode-selection').style.display = 'block';
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
@@ -1159,7 +1184,9 @@ Wichtig:
                 });
 
                 if (!response.ok) {
-                    throw new Error('API Fehler: ' + response.status);
+                    const errorData = await response.json().catch(() => null);
+                    const errorMsg = errorData?.error?.message || ('Status ' + response.status);
+                    throw new Error('API Fehler: ' + errorMsg);
                 }
 
                 const data = await response.json();
